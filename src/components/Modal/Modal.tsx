@@ -11,7 +11,7 @@ const modalRoot = document.getElementById("modal-root")!;
 export default function Modal({ children, onClose }: ModalProps) {
     useEffect(() => {
         const handleEsc = (event: KeyboardEvent) => {
-            if (event.key === "Escape") { onClose(); }
+            if (event.key === "Escape") { onClose() }
         };
     window.addEventListener("keydown", handleEsc);
     document.body.style.overflow = "hidden";

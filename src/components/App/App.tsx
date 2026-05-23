@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import {  useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDebouncedCallback } from "use-debounce";
 
 import SearchBox from "../SearchBox/SearchBox";
@@ -7,8 +7,8 @@ import NoteList from "../NoteList/NoteList";
 import Pagination from "../Pagination/Pagination";
 import Loader from "../Loader/Loader";
 import ErrorMessage from "../ErrorMessage/ErrorMessage";
-
-import { fetchNotes } from "../../services/noteService";
+import NoteForm from "../NoteForm/NoteForm";
+import { deleteNote, fetchNotes } from "../../services/noteService";
 import css from "../App/App.module.css";
 import Modal from "../Modal/Modal";
 
@@ -24,7 +24,12 @@ export default function App() {
   });
   const notes = data?.notes ?? [];
   const totalPages = data?.totalPages ?? 0;
-  
+  const queryClient = useQueryClient();
+  const deleteMutation = useMutation({
+    mutationFn: deleteNote, onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"], });
+    },
+  });
   return (
     <div className={css.app}>
       <header className={css.toolbar}>
@@ -36,14 +41,16 @@ export default function App() {
             onPageChange={setPage}
           />
         )}
-        <button className={css.button} onClick={() => setIsModalOpen(true)}>  Create note +</button>
+        <button type="submit" className={css.button} onClick={() => setIsModalOpen(true)}>Create note +</button>
       </header>
       {isLoading && <Loader />}
       {isError && <ErrorMessage />}
-      {notes.length > 0 && (<NoteList notes={notes} />)}
-      {isModalOpen && (<Modal onClose={() => setIsModalOpen(false)}><p>Create form here</p></Modal>)}
+      {notes.length > 0 && (
+        <NoteList notes={notes} onDelete={(id) => deleteMutation.mutate(id)} />
+      )}
+      {isModalOpen && (<Modal onClose={() => setIsModalOpen(false)}>
+        <NoteForm onClose={() => setIsModalOpen(false)}/>
+      </Modal>)}
     </div>
   );
-  
-}
-  
+} 
